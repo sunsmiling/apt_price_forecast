@@ -35,6 +35,8 @@ df_total = df_total[{'단위면적당전세가','시군구','단지명','도로�
 df_total.to_csv('../data/df_total_cleaning.csv', index=False) 
 
 ####
+kaptcode = pd.read_csv('../data/20230401_gangnam_code.csv') 
+gangnam_kaptcode_list = kaptcode['APT_code'].tolist()
 
 encoding = 'lIlqKHjraRXmeKaO7l0VyXhpIGx3wbe8gfPFrEiLt%2Bl7Ze57iOsdffcawVBm1yKjgOOmfyAnHg98VAwkk4kQQQ%3D%3D'
 decoding = 'lIlqKHjraRXmeKaO7l0VyXhpIGx3wbe8gfPFrEiLt+l7Ze57iOsdffcawVBm1yKjgOOmfyAnHg98VAwkk4kQQQ=='
@@ -172,3 +174,4 @@ for code in gangnam_kaptcode_list:
     i= i+1
 
 base_df.to_csv('../data/apt_base.csv', index=False, encoding="utf-8-sig")
+
