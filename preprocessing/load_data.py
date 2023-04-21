@@ -18,11 +18,11 @@ sns.set(rc={'figure.figsize':(11, 4)})
 plt.rcParams['font.family'] = 'AppleGothic'
 plt.rcParams['axes.unicode_minus'] = False
 
-df_2018 = pd.read_excel('../data/2018_아파트(전월세)_실거래가.xlsx')
-df_2019 = pd.read_excel('../data/2019_아파트(전월세)_실거래가.xlsx') 
-df_2020 = pd.read_excel('../data/2020_아파트(전월세)_실거래가.xlsx') 
-df_2021 = pd.read_excel('../data/2021_아파트(전월세)_실거래가.xlsx') 
-df_2022 = pd.read_excel('../data/2022_아파트(전월세)_실거래가.xlsx') 
+df_2018 = pd.read_excel('apt_price_forecast/data/2018_아파트(전월세)_실거래가.xlsx')
+df_2019 = pd.read_excel('apt_price_forecast/data/2019_아파트(전월세)_실거래가.xlsx') 
+df_2020 = pd.read_excel('apt_price_forecast/data/2020_아파트(전월세)_실거래가.xlsx') 
+df_2021 = pd.read_excel('apt_price_forecast/data/2021_아파트(전월세)_실거래가.xlsx') 
+df_2022 = pd.read_excel('apt_price_forecast/data/2022_아파트(전월세)_실거래가.xlsx') 
 df_total = pd.concat([df_2018, df_2019, df_2020, df_2021, df_2022])
 
 df_total =  df_total[df_total.전월세구분 == '전세'].reset_index(drop=True)
@@ -32,10 +32,10 @@ df_total['보증금(만원)'] = df_total['보증금(만원)'].apply(pd.to_numeri
 df_total['전용면적(㎡)'] = df_total['전용면적(㎡)'].apply(pd.to_numeric,errors='coerce')
 df_total['단위면적당전세가'] = df_total['보증금(만원)'] / df_total['전용면적(㎡)']
 df_total = df_total[{'단위면적당전세가','시군구','단지명','도로명','계약년월','계약일','층','건축년도'}]
-df_total.to_csv('../data/df_total_cleaning.csv', index=False) 
+df_total.to_csv('apt_price_forecast/data/df_total_cleaning.csv', index=False) 
 
 ####
-kaptcode = pd.read_csv('../data/20230401_gangnam_code.csv') 
+kaptcode = pd.read_csv('apt_price_forecast/data/20230401_gangnam_code.csv') 
 gangnam_kaptcode_list = kaptcode['APT_code'].tolist()
 
 encoding = 'lIlqKHjraRXmeKaO7l0VyXhpIGx3wbe8gfPFrEiLt%2Bl7Ze57iOsdffcawVBm1yKjgOOmfyAnHg98VAwkk4kQQQ%3D%3D'
@@ -89,7 +89,8 @@ educationFacility: 교육시설
 """ 
 
 col_list =["kaptCode","kaptName","kaptdPcnt","kaptdPcntu",
-"welfareFacility","educationFacility","kaptdWtimebus","kaptdWtimesub",
+"welfareFacility","educationFacility","convenientFacility",
+"kaptdWtimebus","kaptdWtimesub",
 "subwayStation","subwayLine","subwayStation"
 ]
 
@@ -102,32 +103,26 @@ for code in gangnam_kaptcode_list:
     content = response.text
     xml_obj = bs4.BeautifulSoup(content,'lxml-xml')
     rows = xml_obj.findAll('item')
-
-
     kaptCode = rows[0].find("kaptCode").string
     kaptName = rows[0].find("kaptName").string
-
     kaptdPcnt = rows[0].find("kaptdPcnt").string if not pd.isna(rows[0].find("kaptdPcnt")) else 'NA'
     kaptdPcntu = rows[0].find("kaptdPcntu").string if not pd.isna(rows[0].find("kaptdPcntu")) else 'NA'
-
     welfareFacility = rows[0].find("welfareFacility").string if not pd.isna(rows[0].find("welfareFacility")) else 'NA'
     educationFacility = rows[0].find("educationFacility").string if not pd.isna(rows[0].find("educationFacility")) else 'NA'
-
+    convenientFacility = rows[0].find("convenientFacility").string if not pd.isna(rows[0].find("convenientFacility")) else 'NA'
     kaptdWtimebus = rows[0].find("kaptdWtimebus").string if not pd.isna(rows[0].find("kaptdWtimebus")) else 'NA'
     kaptdWtimesub = rows[0].find("kaptdWtimesub").string if not pd.isna(rows[0].find("kaptdWtimesub")) else 'NA'
     subwayStation = rows[0].find("subwayStation").string if not pd.isna(rows[0].find("subwayStation")) else 'NA'
     subwayLine = rows[0].find("subwayLine").string if not pd.isna(rows[0].find("subwayLine")) else 'NA'
-    subwayStation = rows[0].find("subwayStation").string if not pd.isna(rows[0].find("subwayStation")) else 'NA'
-    
-    
     detail_df.loc[i] = [kaptCode,kaptName,kaptdPcnt,kaptdPcntu,
-    welfareFacility,educationFacility,kaptdWtimebus,kaptdWtimesub,
-    subwayStation,subwayLine,subwayStation
+    welfareFacility,educationFacility,convenientFacility,
+    kaptdWtimebus,kaptdWtimesub,
+    subwayStation,subwayLine
     ]
     i= i+1
 
 
-detail_df.to_csv('../data/apt_detail.csv', index=False, encoding="utf-8-sig")
+detail_df.to_csv('apt_price_forecast/data/apt_detail.csv', index=False, encoding="utf-8-sig")
 
 
 ## Basic info

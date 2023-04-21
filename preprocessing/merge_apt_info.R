@@ -195,4 +195,110 @@ apt_info[which(is.na(apt_info$Bus_new)),"Bus_new"] <- rep("5분이내",9)
 
 # NA 전처리 끝 ---------------------------------------------------------
 colSums(is.na(apt_info))
+
+
+##########################
+##### kaptBcompany ######
+#########################
+#시행사와 시공사 중에서 시공사 정보만 사용
+apt_info = apt_info %>% select(-kaptAcompany)
+
+apt_info$kaptBcompany %>% table()
+# 컨소시엄시공 (2개이상)
+apt_info$kaptBcompany[grep(",",apt_info$kaptBcompany)] <-"컨소시엄시공"
+apt_info$kaptBcompany[grep("/",apt_info$kaptBcompany)] <-"컨소시엄시공"
+apt_info$kaptBcompany[grep("\\.",apt_info$kaptBcompany)]  <-"컨소시엄시공"
+apt_info$kaptBcompany[grep("8개업체",apt_info$kaptBcompany)] <- "컨소시엄시공"
+
+# 현대건설(주)
+apt_info$kaptBcompany[grep("현대건설",apt_info$kaptBcompany)] <- "현대건설(주)"
+# 현대산업개발
+apt_info$kaptBcompany[grep("현대산업",apt_info$kaptBcompany)] <- "현대산업개발(주)"
+# 삼성물산(주)
+apt_info$kaptBcompany[grep("삼성물산",apt_info$kaptBcompany)] <-  "삼성물산(주)"
+apt_info$kaptBcompany[grep("삼성건설",apt_info$kaptBcompany)] <-  "삼성물산(주)"
+
+# 포스코건설(주)
+apt_info$kaptBcompany[grep("포스코",apt_info$kaptBcompany)] <-"포스코건설(주)"
+# 한신공영(주)
+apt_info$kaptBcompany[grep("한신",apt_info$kaptBcompany)] <- "한신공영(주)"
+# 대우건설(주)
+apt_info$kaptBcompany[grep("대우",apt_info$kaptBcompany)] <- "대우건설(주)"
+# 한양
+apt_info$kaptBcompany[grep("한양",apt_info$kaptBcompany)] <- "한양주택(주)"
+# 대림
+apt_info$kaptBcompany[grep("대림",apt_info$kaptBcompany)] <- "대림산업(주)"
+#주택공사&한국도시개발공사(주)
+apt_info$kaptBcompany[grep("주택공사",apt_info$kaptBcompany)] <- "주택공사"
+apt_info$kaptBcompany[grep("도시개발",apt_info$kaptBcompany)] <- "주택공사"
+apt_info$kaptBcompany[grep("공사",apt_info$kaptBcompany)] <- "주택공사"
+
+#서희
+apt_info$kaptBcompany[grep("서희",apt_info$kaptBcompany)]<- "서희건설(주)"
+#GS
+apt_info$kaptBcompany[grep("럭키",apt_info$kaptBcompany)] <-"GS건설(주)"
+apt_info$kaptBcompany[grep("GS",apt_info$kaptBcompany)] <-"GS건설(주)"
+#우성건설(주)
+apt_info$kaptBcompany[grep("우성",apt_info$kaptBcompany)]<-"우성건설(주)"
+#"롯데건설(주)"
+apt_info$kaptBcompany[grep("롯데",apt_info$kaptBcompany)]<-"롯데건설(주)"
+#"SK에코플랜트(주)"
+apt_info$kaptBcompany[grep("에스케이",apt_info$kaptBcompany)] <- "SK에코플랜트(주)"
+apt_info$kaptBcompany[grep("SK",apt_info$kaptBcompany)] <- "SK에코플랜트(주)"
+#"진흥기업(주)"
+apt_info$kaptBcompany[grep("진흥",apt_info$kaptBcompany)] <-"진흥기업(주)"
+#"쌍용건설(주)"
+apt_info$kaptBcompany[grep("쌍용",apt_info$kaptBcompany)] <- "쌍용건설(주)"
+
+Others_company = as.data.frame(table(apt_info$kaptBcompany)) %>% filter(Freq <2) %>%
+  select(Var1) %>% unlist() %>% as.character()
+Others_company
+apt_info$kaptBcompany[apt_info$kaptBcompany %in% Others_company] <- "그외시공사"
+
+table(apt_info$kaptBcompany) %>% sort(decreasing = T)
+
+apt_info %>% head()
+
 write.csv(apt_info,"../data/apt_info.csv", row.names = FALSE)
+
+
+
+#################################
+##########  makeDummy    ########
+#################################
+colnames(apt_info)
+# 1. contrast를 만드는 dummy화 - 순서가 있는 명목형
+#### 1) Subway
+levels(apt_info$Subway_new)
+# [1] "5분이내"     "5~10분이내"  "10~15분이내" "15분초과"
+cbind(apt_info[c(1,2,19,4),c("kaptName","Subway_new")],
+      model.matrix(~Subway_new, data = apt_info[c(1,2,19,4),c("kaptName","Subway_new")])[,-1])
+
+apt_info = cbind(apt_info, as.data.frame(model.matrix(~Subway_new, data = apt_info))[,-1])
+apt_info = apt_info %>% select(-Subway_new)
+
+#### 2) Bus
+levels(apt_info$Bus_new)
+# [1] "5분이내"    "5~10분이내" "10분초과"
+apt_info$Bus_new[c(1,2,31)]
+cbind(apt_info[c(1,2,31),c("kaptName","Bus_new")],
+      model.matrix(~Bus_new, data = apt_info[c(1,2,31),c("kaptName","Bus_new")])[,-1])
+
+apt_info = cbind(apt_info, as.data.frame(model.matrix(~Bus_new, data = apt_info))[,-1])
+apt_info = apt_info %>% select(-Bus_new)
+
+# 2. One hot encoding dummy화 - 순서가 없는 명목형
+colnames(apt_info)
+head(apt_info)
+apt_info$codeHallNm %>% table()
+# 계단식 복도식 타워형 혼합식
+# 86     35      1     49
+apt_info = cbind(apt_info, as.data.frame(model.matrix(~0+codeHallNm, data = apt_info)))
+apt_info = apt_info %>% select(-codeHallNm)
+
+apt_info$kaptBcompany%>% table()
+apt_info = cbind(apt_info, as.data.frame(model.matrix(~0+kaptBcompany, data = apt_info)))
+apt_info = apt_info %>% select(-kaptBcompany)
+
+
+write.csv(apt_info,"../data/apt_info_dummy.csv",row.names = FALSE)
